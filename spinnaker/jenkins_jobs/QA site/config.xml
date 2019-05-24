@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.15">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>SITE_URL</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.45">
+    <script>podTemplate(label: &apos;mypod&apos;, containers: [
+    containerTemplate(name: &apos;docker&apos;, image: &apos;billyteves/jenkinslave-dind-kubernetes&apos;, ttyEnabled: true, command: &apos;cat&apos;),
+  ]) {
+    node(&apos;mypod&apos;) {
+
+        stage(&apos;Check site availability&apos;) {
+            container(&apos;docker&apos;) {
+
+              
+                    sh &quot;&quot;&quot;
+                        curl ${SITE_URL} 
+                        &quot;&quot;&quot;
+                    
+            }
+        }
+
+     
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
