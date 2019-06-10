@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.15">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_REPO</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_BRANCH</name>
+          <description></description>
+          <defaultValue>master</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>REGISTRY_USERNAME</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>REGISTRY_PASSWORD</name>
+          <description></description>
+          <defaultValue>{AQAAABAAAAAQ9nhtoMzOOUXlbluCu25NgaV+wlveInJ5SmI4DYcZQZs=}</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>IMAGE_TAG</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.45">
+    <script>podTemplate(label: &apos;mypod&apos;, containers: [
+    containerTemplate(name: &apos;docker&apos;, image: &apos;billyteves/jenkinslave-dind-kubernetes&apos;, ttyEnabled: true, command: &apos;cat&apos;),
+  ],
+  volumes: [
+    hostPathVolume(mountPath: &apos;/var/run/docker.sock&apos;, hostPath: &apos;/var/run/docker.sock&apos;),
+  ]) {
+    node(&apos;mypod&apos;) {
+
+        stage(&apos;Build and publish&apos;) {
+            container(&apos;docker&apos;) {
+
+              
+                    sh &quot;&quot;&quot;
+                        git clone ${GIT_REPO} repo
+                        cd repo
+                        git checkout ${GIT_BRANCH}
+                        docker build -t ${REGISTRY_USERNAME}/${IMAGE_TAG} .
+                        docker login -u ${REGISTRY_USERNAME} -p ${REGISTRY_PASSWORD}
+                        docker push ${REGISTRY_USERNAME}/${IMAGE_TAG}
+                        &quot;&quot;&quot;
+                    
+            }
+        }
+
+     
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
